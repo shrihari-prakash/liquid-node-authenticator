@@ -31,8 +31,9 @@ const liquidConnector = new LiquidConnector({
 #### Authenticate a user connecting to your microservice
 
 ```js
-const user = await liquidConnector.authenticate(token);
-// Now use this user info for the rest of your logic.
+const tokenDetails = await liquidConnector.authenticate(token);
+
+// Now use tokenDetails.user in the rest of your logic.
 ```
 
 #### Get access token for accessing client level APIs
@@ -40,4 +41,19 @@ const user = await liquidConnector.authenticate(token);
 ```js
 const { accessToken } = await liquidConnector.getAccessToken();
 // Make APIs calls that requires client authentication.
+```
+
+#### Check if a scope is allowed for a token
+
+```js
+const allowed = await liquidConnector.checkTokenScope(
+  "your:scope:name",
+  token /* tokenDetails object acqurired in authenticate() function */
+);
+
+if (allowed) {
+  // Scope is allowed, continue with action
+} else {
+  // Scope is NOT allowed, send insufficient priviledge error
+}
 ```
