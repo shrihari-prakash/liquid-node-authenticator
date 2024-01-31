@@ -24,7 +24,7 @@ const liquidConnector = new LiquidConnector({
     expire: 300, // 5 minutes
   },
   // Optional
-  logger: console, // Or any other logger that has debug, info, warn and error functions.
+  debugging: true, // Print console logs
 });
 ```
 
