@@ -1,9 +1,8 @@
 {
   "name": "liquid-node-authenticator",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "A Node.js connector library to integrate your microservices with Liquid authentication services.",
-  "main": "./dist/index.cjs.js",
-  "exports": "./dist/index.js",
+  "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
     "lint": "standard | snazzy",
