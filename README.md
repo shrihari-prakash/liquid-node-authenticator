@@ -1,4 +1,4 @@
-## 📦 Liquid Node Connector
+## 📦 Liquid Node Authenticator
 
 A Node.js connector library to integrate your microservices with [Liquid](https://github.com/shrihari-prakash/liquid) authentication services. This library requires Node version 18 or above.
 
