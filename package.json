@@ -11,7 +11,7 @@
     "test": "mocha \"tests/**/*.tests.js\"",
     "test:coverage": "NODE_ENV=test c8 --all --include=lib/* --reporter=html --reporter=text mocha \"tests/**/*.tests.js\"",
     "test:watch": "npm test -- --watch",
-    "build": "rollup --bundleConfigAsCjs --config rollup.dist.config.js && tsc"
+    "build": "rollup --bundleConfigAsCjs --config rollup.dist.config.js && copyfiles -f lib/index.d.ts dist"
   },
   "babel": {
     "presets": [
@@ -79,6 +79,7 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
+    "copyfiles": "^2.4.1",
     "mollitia": "^0.1.0"
   }
 }

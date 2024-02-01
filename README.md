@@ -4,16 +4,16 @@ A Node.js connector library to integrate your microservices with [Liquid](https:
 
 ### Installation
 
-Run `npm i liquid-node-connector`.
+Run `npm i liquid-node-authenticator`.
 
 ### Usage
 
 #### Initialization
 
 ```js
-import LiquidConnector from "liquid-node-connector";
+import LiquidAuthenticator from "liquid-node-authenticator";
 
-const liquidConnector = new LiquidConnector({
+const liquidAuthenticator = new LiquidAuthenticator({
   host: "host_address_of_your_liquid_instance",
   clientId: "your_liquid_client_id",
   clientSecret: "your_liquid_client_secret",
@@ -31,7 +31,7 @@ const liquidConnector = new LiquidConnector({
 #### Authenticate a user connecting to your microservice
 
 ```js
-const tokenDetails = await liquidConnector.authenticate(token);
+const tokenDetails = await liquidAuthenticator.authenticate(token);
 
 // Now use tokenDetails.user in the rest of your logic.
 ```
@@ -39,14 +39,14 @@ const tokenDetails = await liquidConnector.authenticate(token);
 #### Get access token for accessing client level APIs
 
 ```js
-const { accessToken } = await liquidConnector.getAccessToken();
+const { accessToken } = await liquidAuthenticator.getAccessToken();
 // Make APIs calls that requires client authentication.
 ```
 
 #### Check if a scope is allowed for a token
 
 ```js
-const allowed = await liquidConnector.checkTokenScope(
+const allowed = await liquidAuthenticator.checkTokenScope(
   "your:scope:name",
   token /* tokenDetails object acqurired in authenticate() function */
 );
