@@ -26,10 +26,6 @@ interface ConnectorOptions {
   debugging?: boolean;
 }
 
-class UnauthorizedError extends Error {
-  name = "UnauthorizedError";
-}
-
 declare module "liquid-node-authenticator" {
   export default class LiquidNodeAuthenticator {
     constructor(options: ConnectorOptions);
