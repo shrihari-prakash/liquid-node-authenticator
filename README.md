@@ -46,7 +46,7 @@ const { accessToken } = await liquidAuthenticator.getAccessToken();
 #### Check if a scope is allowed for a token
 
 ```js
-const allowed = await liquidAuthenticator.checkTokenScope(
+const allowed = liquidAuthenticator.checkTokenScope(
   "your:scope:name",
   token /* tokenDetails object acqurired in authenticate() function */
 );
