@@ -1,14 +1,23 @@
 /**
  * A simple retry utility class
  */
+interface RetryOptions {
+  attempts: number;
+  interval: number;
+  mode?: 'linear' | 'exponential';
+  factor?: number;
+  onRejection?: (err: Error, attempt: number) => boolean;
+}
+
 class Retry {
+  attempts: number;
+  interval: number;
+  mode: 'linear' | 'exponential';
+  factor: number;
+  onRejection: (err: Error, attempt: number) => boolean;
+
   /**
-   * @param {Object} options
-   * @param {number} options.attempts - Max number of attempts.
-   * @param {number} options.interval - Initial delay in ms.
-   * @param {'linear'|'exponential'} options.mode - Retry mode.
-   * @param {number} [options.factor=2] - Growth factor for exponential mode.
-   * @param {Function} [options.onRejection] - Callback for each rejection.
+   * @param {RetryOptions} options
    */
   constructor ({
     attempts,
@@ -16,7 +25,7 @@ class Retry {
     mode = 'linear',
     factor = 2,
     onRejection = () => true
-  }) {
+  }: RetryOptions) {
     this.attempts = attempts
     this.interval = interval
     this.mode = mode
@@ -24,14 +33,14 @@ class Retry {
     this.onRejection = onRejection
   }
 
-  async execute (fn) {
+  async execute<T> (fn: () => Promise<T> | T): Promise<T> {
     let attempt = 0
     let delay = this.interval
 
     while (attempt < this.attempts) {
       try {
         return await fn()
-      } catch (err) {
+      } catch (err: any) {
         attempt++
         if (attempt >= this.attempts || !this.onRejection(err, attempt)) {
           throw err
@@ -45,6 +54,7 @@ class Retry {
         }
       }
     }
+    throw new Error('Retry limit reached without returning')
   }
 }
 

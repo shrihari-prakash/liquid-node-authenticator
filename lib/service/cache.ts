@@ -5,16 +5,20 @@ const FIVE_MINUTES = 300
  *
  * @class
  */
+interface CacheOptions {
+  client: any;
+  expire?: number;
+}
+
 class Cache {
+  cachePrefix?: string;
+  cacheClient?: any;
+  cacheExpiry?: number;
+
   /**
-     * Creates an instance of the Cache class.
-     *
-     * @constructor
-     * @param {Object} [cacheOptions] - Options for configuring the cache.
-     * @param {Object} [cacheOptions.client] - The caching client (e.g., Redis client) to use.
-     * @param {number} [cacheOptions.expire] - The expiration time for cached items in seconds.
-     */
-  constructor (cacheOptions) {
+   * @param {CacheOptions} [cacheOptions]
+   */
+  constructor (cacheOptions?: CacheOptions) {
     if (cacheOptions) {
       this.cachePrefix = 'liquid_node_connector:'
       this.cacheClient = cacheOptions.client
@@ -29,7 +33,7 @@ class Cache {
      * @param {string} key - The key used to retrieve data from the cache.
      * @returns {Promise<Object|null>} The cached data, or null if the cache is not configured.
      */
-  async get (key) {
+  async get (key: string): Promise<any | null> {
     if (!this.cacheClient) {
       return null
     }
@@ -47,7 +51,7 @@ class Cache {
      * @param {Object} data - The JSON data to be stored in the cache.
      * @returns {Promise<undefined>} A Promise indicating the completion of the set operation.
      */
-  async set (key, data) {
+  async set (key: string, data: any): Promise<any> {
     if (!this.cacheClient) {
       return
     }

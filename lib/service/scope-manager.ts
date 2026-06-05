@@ -1,11 +1,10 @@
 import Retry from './retry'
 
-/**
- * @typedef {Object} Scope
- * @property {string} name - The name of the scope.
- * @property {string} description - The description of the scope.
- * @property {string} [parent] - The parent scope's name.
- */
+export interface Scope {
+  name: string;
+  description: string;
+  parent?: string | null;
+}
 
 /**
  * Manages scopes and provides methods for checking if a scope is allowed.
@@ -13,32 +12,17 @@ import Retry from './retry'
  * @class
  */
 class ScopeManager {
+  host: string;
+  scopes: Record<string, Scope>;
+  logger: any;
+
   /**
-     * Creates an instance of the ScopeManager class.
-     *
-     * @constructor
-     * @param {string} host - The base URL where the scopes can be fetched.
-     */
-  constructor (host, logger) {
-    /**
-         * The base URL where the scopes can be fetched.
-         * @type {string}
-         * @private
-         */
+   * @constructor
+   * @param {string} host - The base URL where the scopes can be fetched.
+   */
+  constructor (host: string, logger: any) {
     this.host = host
-
-    /**
-         * The loaded scopes.
-         * @type {Object}
-         * @private
-         */
     this.scopes = {}
-
-    /**
-         * The logger.
-         * @type {Object}
-         * @private
-         */
     this.logger = logger
 
     this.logger.debug('Initializing scope manager with host: ' + this.host)
@@ -62,7 +46,7 @@ class ScopeManager {
      * @returns {Object} The tree structure of scopes.
      * @private
      */
-  getScopeTree (scopes, root = null) {
+  getScopeTree (scopes: Scope[], root: string | null = null): any {
     return Object.fromEntries(
       scopes
         .filter((scope) => scope.parent === root)
@@ -75,7 +59,7 @@ class ScopeManager {
      *
      * @private
      */
-  async initializeScopes () {
+  async initializeScopes (): Promise<void> {
     try {
       const response = await fetch(`${this.host}/user/scopes`)
       if (!response.ok) {
@@ -83,7 +67,7 @@ class ScopeManager {
       }
       this.scopes = (await response.json()).data.scopes
       this.logger.error('Scopes initialized.')
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Error initializing scopes:', error.message)
       throw error
     }
@@ -94,7 +78,7 @@ class ScopeManager {
      *
      * @returns {Object} The loaded scopes.
      */
-  getScopes () {
+  getScopes (): Record<string, Scope> {
     return this.scopes
   }
 
@@ -105,7 +89,7 @@ class ScopeManager {
      * @param {Object} token - The token object.
      * @returns {boolean} True if the scope is allowed, false otherwise.
      */
-  checkTokenScope (scope, token = { scope: [] }) {
+  checkTokenScope (scope: string, token: any = { scope: [] }): boolean {
     if (!this.scopes) {
       this.logger.warn('Scope list not ready')
       return false
@@ -125,13 +109,13 @@ class ScopeManager {
      * @param {string[]} [allowedScopes=[]] - The array of allowed scopes.
      * @returns {boolean} True if the scope is allowed, false otherwise.
      */
-  isScopeAllowed (scope, allowedScopes = []) {
+  isScopeAllowed (scope: string, allowedScopes: string[] = []): boolean {
     const scopeObject = this.scopes[scope]
     if (!scopeObject) {
       this.logger.warn(`Unknown scope ${scope}. Did you forget to configure this scope in your Liquid server?`)
       return false
     }
-    if (allowedScopes.includes(scopeObject.name) || allowedScopes.includes(scopeObject.parent)) {
+    if (allowedScopes.includes(scopeObject.name) || (scopeObject.parent && allowedScopes.includes(scopeObject.parent))) {
       return true
     } else if (scopeObject.parent) {
       return this.isScopeAllowed(scopeObject.parent, allowedScopes)

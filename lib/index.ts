@@ -1,7 +1,17 @@
-import { ForbiddenError, UnauthorizedError, NetworkError, CustomError, isLiquidError } from './constants/errors.js'
+import { ForbiddenError, CustomError, isLiquidError } from './constants/errors.js'
 import Cache from './service/cache.js'
 import Logger from './service/logger.js'
 import ScopeManager from './service/scope-manager.js'
+import { ApiClient } from './service/api-client.js'
+
+interface LiquidNodeAuthenticatorOptions {
+  host: string;
+  clientId: string;
+  clientSecret: string;
+  scope?: string | string[];
+  cacheOptions?: any;
+  debugging?: boolean;
+}
 
 /**
  * LiquidNodeAuthenticator provides methods for authenticating and obtaining access tokens
@@ -10,33 +20,31 @@ import ScopeManager from './service/scope-manager.js'
  * @class
  */
 class LiquidNodeAuthenticator {
-  accessToken = null
-  accessTokenExpiry = new Date(0)
+  accessToken: string | null = null
+  accessTokenExpiry: Date = new Date(0)
+  clientId: string;
+  clientSecret: string;
+  scope: string;
+  host: string;
+  cache: Cache;
+  logger: Logger;
+  scopeManager: ScopeManager;
+  apiClient: ApiClient;
 
   /**
-     * Creates an instance of LiquidNodeAuthenticator.
-     *
-     * @constructor
-     * @param {Object} options - Configuration options for the LiquidNodeAuthenticator.
-     * @param {string} options.host - The base URL of the Liquid OAuth server.
-     * @param {string} options.clientId - The client ID for authentication.
-     * @param {string} options.clientSecret - The client secret for authentication.
-     * @param {(string|string[])} [options.scope="*"] - The OAuth scope(s) for authentication.
-     * @param {Object} [options.cacheOptions] - Options for configuring the cache.
-     * @param {Object} [options.cacheOptions.client] - The caching client (e.g., Redis client) to use.
-     * @param {number} [options.cacheOptions.expire] - The expiration time for cached items in seconds.
-     * @param {boolean} [options.debugging] - Specifies if logs should be printed to console.
-     */
-  constructor ({ host, clientId, clientSecret, scope = '*', cacheOptions, debugging = true }) {
+   * Creates an instance of LiquidNodeAuthenticator.
+   *
+   * @constructor
+   * @param {LiquidNodeAuthenticatorOptions} options - Configuration options for the LiquidNodeAuthenticator.
+   */
+  constructor ({ host, clientId, clientSecret, scope = '*', cacheOptions, debugging = true }: LiquidNodeAuthenticatorOptions) {
     this.clientId = clientId
     this.clientSecret = clientSecret
-    this.scope = scope
-    if (Array.isArray(this.scope)) {
-      this.scope = this.scope.join(',')
-    }
+    this.scope = Array.isArray(scope) ? scope.join(',') : scope
     this.host = host
     this.cache = new Cache(cacheOptions)
     this.logger = new Logger(debugging)
+    this.apiClient = new ApiClient({ host: this.host })
     this.scopeManager = new ScopeManager(this.host, this.logger)
     this.logger.info(
       'Initialized Liquid Node Connector for client ' + clientId
@@ -52,7 +60,7 @@ class LiquidNodeAuthenticator {
     * @throws {NetworkError} If a network error occurs during the authentication process.
     * @returns {Object} The user's token information if authentication is successful.
     */
-  async authenticate (token) {
+  async authenticate (token: string): Promise<any> {
     try {
       if (!token) { throw new ForbiddenError() }
       const cacheKey = `token:${token}`
@@ -64,22 +72,17 @@ class LiquidNodeAuthenticator {
           throw new ForbiddenError()
         }
       }
-      const api = `${this.host}/oauth/introspect`
-      const headers = {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${(await this.getAccessToken()).accessToken}`
+
+      const clientToken = (await this.getAccessToken()).accessToken;
+      if (!clientToken) {
+         throw new ForbiddenError()
       }
-      const body = JSON.stringify({ token })
-      let response
-      try {
-        response = await fetch(api, { method: 'POST', headers, body })
-      } catch {
-        throw new NetworkError()
-      }
-      const result = await response.json()
+
+      const { status, result } = await this.apiClient.introspectToken(token, clientToken);
+      
       this.logger.debug(`Cache written for ${cacheKey}`)
-      if (response.status !== 200 || !result.ok) {
-        if (response.status === 401) {
+      if (status !== 200 || !result.ok) {
+        if (status === 401) {
           this.accessToken = null
           this.accessTokenExpiry = new Date(0)
         }
@@ -103,30 +106,14 @@ class LiquidNodeAuthenticator {
      * @throws {UnauthorizedError} If the OAuth server returns an unauthorized status.
      * @returns {Object} The access token and its expiration details.
      */
-  async getAccessToken () {
+  async getAccessToken (): Promise<{ accessToken: string | null; accessTokenExpiry: Date }> {
     try {
       const now = new Date()
       if (this.accessTokenExpiry.getTime() <= now.getTime()) {
         const expiry = new Date()
-        const api = `${this.host}/oauth/token`
-        const headers = {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        }
-        const body = new URLSearchParams()
-        body.append('grant_type', 'client_credentials')
-        body.append('client_id', this.clientId)
-        body.append('client_secret', this.clientSecret)
-        body.append('scope', this.scope)
-        let response
-        try {
-          response = await fetch(api, { method: 'POST', headers, body })
-        } catch {
-          throw new NetworkError()
-        }
-        if (response.status !== 200) {
-          throw new UnauthorizedError()
-        }
-        const result = await response.json()
+        
+        const result = await this.apiClient.getClientCredentials(this.clientId, this.clientSecret, this.scope);
+
         this.accessToken = result.access_token
         expiry.setSeconds(expiry.getSeconds() + result.expires_in)
         this.accessTokenExpiry = expiry
@@ -152,7 +139,7 @@ class LiquidNodeAuthenticator {
      * @param {Object} token - The Express response object.
      * @returns {boolean} True if the scope is allowed, false otherwise.
      */
-  checkTokenScope (scope, token) {
+  checkTokenScope (scope: string, token: any): boolean {
     return this.scopeManager.checkTokenScope(scope, token)
   }
 }

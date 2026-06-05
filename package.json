@@ -1,39 +1,15 @@
 {
   "name": "liquid-node-authenticator",
-  "version": "1.1.18",
+  "version": "1.1.19",
   "description": "A Node.js connector library to integrate your microservices with Liquid authentication services.",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "lint": "standard | snazzy",
-    "lint:fix": "standard --fix | snazzy",
-    "lint:test": "npm run lint && npm test",
-    "test": "mocha \"tests/**/*.tests.js\"",
-    "test:coverage": "NODE_ENV=test c8 --all --include=lib/* --reporter=html --reporter=text mocha \"tests/**/*.tests.js\"",
+    "lint": "tsc --noEmit",
+    "test": "mocha \"tests/**/*.tests.ts\"",
+    "test:coverage": "NODE_ENV=test c8 --all --include=lib/* --reporter=html --reporter=text npm test",
     "test:watch": "npm test -- --watch",
-    "build": "rollup --bundleConfigAsCjs --config rollup.dist.config.js && copyfiles -f lib/index.d.ts dist"
-  },
-  "babel": {
-    "presets": [
-      "@babel/env"
-    ],
-    "env": {
-      "test": {
-        "plugins": [
-          "istanbul"
-        ]
-      }
-    }
-  },
-  "nyc": {
-    "sourceMap": false,
-    "instrument": false
-  },
-  "standard": {
-    "ignore": [
-      "node_modules/",
-      "dist/"
-    ]
+    "build": "tsc"
   },
   "targets": "> 0.25%, not dead",
   "repository": {
@@ -63,20 +39,16 @@
   ],
   "homepage": "https://github.com/shrihari-prakash/liquid-node-authenticator#readme",
   "devDependencies": {
-    "@babel/cli": "^7.23.0",
-    "@babel/core": "^7.23.2",
-    "@babel/preset-env": "^7.23.2",
-    "@babel/register": "^7.22.15",
-    "@rollup/plugin-babel": "^6.0.4",
-    "@rollup/plugin-commonjs": "^25.0.5",
+    "@types/chai": "^5.2.3",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^25.9.1",
+    "@types/sinon": "^21.0.1",
     "c8": "^9.1.0",
     "chai": "^4.3.10",
-    "copyfiles": "^2.4.1",
     "jsdoc": "^4.0.2",
     "mocha": "^10.2.0",
-    "rollup": "^4.0.2",
-    "snazzy": "^9.0.0",
-    "standard": "^17.1.0",
-    "typescript": "^5.3.3"
+    "sinon": "^22.0.0",
+    "tsx": "^4.22.4",
+    "typescript": "^5.9.3"
   }
 }

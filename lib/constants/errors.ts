@@ -5,13 +5,14 @@
  * @extends {Error}
  */
 class ForbiddenError extends Error {
+  code: number;
   /**
      * Creates an instance of ForbiddenError.
      *
      * @constructor
      * @param {string} [message] - Optional error message.
      */
-  constructor (message) {
+  constructor (message?: string) {
     super(message)
     this.code = 403
     this.name = 'ForbiddenError'
@@ -25,13 +26,14 @@ class ForbiddenError extends Error {
  * @extends {Error}
  */
 class UnauthorizedError extends Error {
+  code: number;
   /**
      * Creates an instance of UnauthorizedError.
      *
      * @constructor
      * @param {string} [message] - Optional error message.
      */
-  constructor (message) {
+  constructor (message?: string) {
     super(message)
     this.code = 401
     this.name = 'UnauthorizedError'
@@ -45,13 +47,14 @@ class UnauthorizedError extends Error {
  * @extends {Error}
  */
 class NetworkError extends Error {
+  code: number;
   /**
      * Creates an instance of NetworkError.
      *
      * @constructor
      * @param {string} [message] - Optional error message.
      */
-  constructor (message) {
+  constructor (message?: string) {
     super(message)
     this.code = 503
     this.name = 'NetworkError'
@@ -65,6 +68,7 @@ class NetworkError extends Error {
  * @extends {Error}
  */
 class CustomError extends Error {
+  code: number;
   /**
      * Creates an instance of CustomError.
      *
@@ -73,7 +77,7 @@ class CustomError extends Error {
      * @param {number} code - The custom error code.
      * @param {string} [message] - Optional error message.
      */
-  constructor (name, code, message) {
+  constructor (name: string, code: number, message?: string) {
     super(message)
     this.code = code
     this.name = name
@@ -87,7 +91,7 @@ class CustomError extends Error {
  * @param {Error} error - The error object to check.
  * @returns {boolean} True if the error is a ForbiddenError, UnauthorizedError, or NetworkError; otherwise, false.
  */
-function isLiquidError (error) {
+function isLiquidError (error: any): boolean {
   return error instanceof ForbiddenError || error instanceof UnauthorizedError || error instanceof NetworkError
 }
 

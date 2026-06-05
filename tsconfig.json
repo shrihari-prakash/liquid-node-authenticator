@@ -1,8 +1,21 @@
 {
-  "include": ["dist/index.js"],
   "compilerOptions": {
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "outDir": "./dist",
+    "rootDir": "./lib",
     "declaration": true,
-    "emitDeclarationOnly": true,
-    "allowJs": true
-  }
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": [
+    "lib/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "tests"
+  ]
 }
