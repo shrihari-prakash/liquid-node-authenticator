@@ -1,6 +1,11 @@
 ## 📦 Liquid Node Authenticator
 
-A Node.js connector library to integrate your microservices with [Liquid](https://github.com/shrihari-prakash/liquid) authentication services. This library requires Node version 18 or above.
+A Node.js client for [Liquid](https://github.com/shrihari-prakash/liquid) authentication services. You can use this library to:
+
+- Authenticate and validate user tokens arriving at your microservice, including checking for specific scopes.
+- Manage client credentials and automatically cache access tokens for your microservice to talk directly to Liquid APIs (for retrieving user info, handling subscriptions, pushing custom data, etc).
+
+Requires Node 18+.
 
 ### Installation
 
@@ -45,10 +50,12 @@ const { accessToken } = await liquidAuthenticator.getAccessToken();
 
 #### Check if a scope is allowed for a token
 
+Read more about configuring scopes and access control in the [Liquid documentation](https://liquid.shrihariprakasam.in/Understanding-Access-Control-and-Integrating-with-Other-Microservices).
+
 ```js
 const allowed = liquidAuthenticator.checkTokenScope(
   "your:scope:name",
-  token /* tokenDetails object acqurired in authenticate() function */
+  token /* tokenDetails object acqurired in authenticate() function */,
 );
 
 if (allowed) {
