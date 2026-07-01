@@ -1,37 +1,10 @@
 import { ForbiddenError, CustomError, isLiquidError } from './constants/errors.js'
-import Cache, { CacheOptions } from './service/cache.js'
-import Logger, { LoggerInterface } from './service/logger.js'
+import Cache from './service/cache.js'
+import Logger from './service/logger.js'
 import ScopeManager from './service/scope-manager.js'
 import { ApiClient } from './service/api-client.js'
-
-export { CacheOptions, LoggerInterface }
-
-export interface TokenInfo {
-  accessToken?: string;
-  accessTokenExpiresAt?: string;
-  scope?: string;
-  user?: {
-    [key: string]: any;
-  };
-  [key: string]: any;
-}
-
-export interface TokenResponse {
-  accessToken: string | null;
-  accessTokenExpiry: Date;
-}
-
-export interface LiquidNodeAuthenticatorOptions {
-  host: string;
-  clientId: string;
-  clientSecret: string;
-  scope?: string | string[];
-  cacheOptions?: CacheOptions;
-  debugging?: boolean;
-  logger?: LoggerInterface | any;
-}
-
-export type ConnectorOptions = LiquidNodeAuthenticatorOptions;
+import type { CacheOptions } from './service/cache.js'
+import type { LoggerInterface } from './service/logger.js'
 
 /**
  * LiquidNodeAuthenticator provides methods for authenticating and obtaining access tokens
@@ -55,9 +28,9 @@ class LiquidNodeAuthenticator {
    * Creates an instance of LiquidNodeAuthenticator.
    *
    * @constructor
-   * @param {LiquidNodeAuthenticatorOptions} options - Configuration options for the LiquidNodeAuthenticator.
+   * @param {LiquidNodeAuthenticator.Options} options - Configuration options for the LiquidNodeAuthenticator.
    */
-  constructor ({ host, clientId, clientSecret, scope = '*', cacheOptions, debugging = true, logger }: LiquidNodeAuthenticatorOptions) {
+  constructor ({ host, clientId, clientSecret, scope = '*', cacheOptions, debugging = true, logger }: LiquidNodeAuthenticator.Options) {
     this.clientId = clientId
     this.clientSecret = clientSecret
     this.scope = Array.isArray(scope) ? scope.join(',') : scope
@@ -80,7 +53,7 @@ class LiquidNodeAuthenticator {
     * @throws {NetworkError} If a network error occurs during the authentication process.
     * @returns {Object} The user's token information if authentication is successful.
     */
-  async authenticate (token: string): Promise<TokenInfo> {
+  async authenticate (token: string): Promise<LiquidNodeAuthenticator.TokenInfo> {
     try {
       if (!token) { throw new ForbiddenError() }
       const cacheKey = `token:${token}`
@@ -126,7 +99,7 @@ class LiquidNodeAuthenticator {
      * @throws {UnauthorizedError} If the OAuth server returns an unauthorized status.
      * @returns {Object} The access token and its expiration details.
      */
-  async getAccessToken (): Promise<TokenResponse> {
+  async getAccessToken (): Promise<LiquidNodeAuthenticator.TokenResponse> {
     try {
       const now = new Date()
       if (this.accessTokenExpiry.getTime() <= now.getTime()) {
@@ -156,12 +129,45 @@ class LiquidNodeAuthenticator {
      * Checks if a given scope is allowed based on the user's allowed scopes.
      *
      * @param {string} scope - The scope to check.
-     * @param {Object} token - The Express response object.
+     * @param {Object} token - The token object returned from authenticate().
      * @returns {boolean} True if the scope is allowed, false otherwise.
      */
-  checkTokenScope (scope: string, token: TokenInfo | any): boolean {
+  checkTokenScope (scope: string, token: LiquidNodeAuthenticator.TokenInfo | any): boolean {
     return this.scopeManager.checkTokenScope(scope, token)
   }
 }
 
-export default LiquidNodeAuthenticator
+// eslint-disable-next-line @typescript-eslint/no-namespace
+namespace LiquidNodeAuthenticator {
+  export interface TokenInfo {
+    accessToken?: string;
+    accessTokenExpiresAt?: string;
+    scope?: string;
+    user?: {
+      [key: string]: any;
+    };
+    [key: string]: any;
+  }
+
+  export interface TokenResponse {
+    accessToken: string | null;
+    accessTokenExpiry: Date;
+  }
+
+  export interface Options {
+    host: string;
+    clientId: string;
+    clientSecret: string;
+    scope?: string | string[];
+    cacheOptions?: CacheOptions;
+    debugging?: boolean;
+    logger?: LoggerInterface | any;
+  }
+
+  /** @deprecated Use Options instead */
+  export type ConnectorOptions = Options;
+  /** @deprecated Use Options instead */
+  export type LiquidNodeAuthenticatorOptions = Options;
+}
+
+export = LiquidNodeAuthenticator
