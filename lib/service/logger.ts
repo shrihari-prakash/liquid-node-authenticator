@@ -1,9 +1,17 @@
+export interface LoggerInterface {
+  debug(...args: any[]): void;
+  info(...args: any[]): void;
+  warn(...args: any[]): void;
+  error(...args: any[]): void;
+  [key: string]: any;
+}
+
 /**
  * Logger class for handling logging in the Liquid Node Connector.
  *
  * @class
  */
-class Logger {
+class Logger implements LoggerInterface {
   debugging: boolean
   prefix: string
 

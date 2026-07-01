@@ -1,4 +1,5 @@
 import Retry from './retry'
+import { LoggerInterface } from './logger.js'
 
 export interface Scope {
   name: string;
@@ -14,13 +15,13 @@ export interface Scope {
 class ScopeManager {
   host: string;
   scopes: Record<string, Scope>;
-  logger: any;
+  logger: LoggerInterface | any;
 
   /**
    * @constructor
    * @param {string} host - The base URL where the scopes can be fetched.
    */
-  constructor (host: string, logger: any) {
+  constructor (host: string, logger: LoggerInterface | any) {
     this.host = host
     this.scopes = {}
     this.logger = logger

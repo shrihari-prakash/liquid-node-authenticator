@@ -5,8 +5,8 @@ const FIVE_MINUTES = 300
  *
  * @class
  */
-interface CacheOptions {
-  client: any;
+export interface CacheOptions {
+  client?: any;
   expire?: number;
 }
 

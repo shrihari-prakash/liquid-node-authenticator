@@ -1,17 +1,37 @@
 import { ForbiddenError, CustomError, isLiquidError } from './constants/errors.js'
-import Cache from './service/cache.js'
-import Logger from './service/logger.js'
+import Cache, { CacheOptions } from './service/cache.js'
+import Logger, { LoggerInterface } from './service/logger.js'
 import ScopeManager from './service/scope-manager.js'
 import { ApiClient } from './service/api-client.js'
 
-interface LiquidNodeAuthenticatorOptions {
+export { CacheOptions, LoggerInterface }
+
+export interface TokenInfo {
+  accessToken?: string;
+  accessTokenExpiresAt?: string;
+  scope?: string;
+  user?: {
+    [key: string]: any;
+  };
+  [key: string]: any;
+}
+
+export interface TokenResponse {
+  accessToken: string | null;
+  accessTokenExpiry: Date;
+}
+
+export interface LiquidNodeAuthenticatorOptions {
   host: string;
   clientId: string;
   clientSecret: string;
   scope?: string | string[];
-  cacheOptions?: any;
+  cacheOptions?: CacheOptions;
   debugging?: boolean;
+  logger?: LoggerInterface | any;
 }
+
+export type ConnectorOptions = LiquidNodeAuthenticatorOptions;
 
 /**
  * LiquidNodeAuthenticator provides methods for authenticating and obtaining access tokens
@@ -27,7 +47,7 @@ class LiquidNodeAuthenticator {
   scope: string;
   host: string;
   cache: Cache;
-  logger: Logger;
+  logger: LoggerInterface | any;
   scopeManager: ScopeManager;
   apiClient: ApiClient;
 
@@ -37,13 +57,13 @@ class LiquidNodeAuthenticator {
    * @constructor
    * @param {LiquidNodeAuthenticatorOptions} options - Configuration options for the LiquidNodeAuthenticator.
    */
-  constructor ({ host, clientId, clientSecret, scope = '*', cacheOptions, debugging = true }: LiquidNodeAuthenticatorOptions) {
+  constructor ({ host, clientId, clientSecret, scope = '*', cacheOptions, debugging = true, logger }: LiquidNodeAuthenticatorOptions) {
     this.clientId = clientId
     this.clientSecret = clientSecret
     this.scope = Array.isArray(scope) ? scope.join(',') : scope
     this.host = host
     this.cache = new Cache(cacheOptions)
-    this.logger = new Logger(debugging)
+    this.logger = logger || new Logger(debugging)
     this.apiClient = new ApiClient({ host: this.host })
     this.scopeManager = new ScopeManager(this.host, this.logger)
     this.logger.info(
@@ -60,7 +80,7 @@ class LiquidNodeAuthenticator {
     * @throws {NetworkError} If a network error occurs during the authentication process.
     * @returns {Object} The user's token information if authentication is successful.
     */
-  async authenticate (token: string): Promise<any> {
+  async authenticate (token: string): Promise<TokenInfo> {
     try {
       if (!token) { throw new ForbiddenError() }
       const cacheKey = `token:${token}`
@@ -106,7 +126,7 @@ class LiquidNodeAuthenticator {
      * @throws {UnauthorizedError} If the OAuth server returns an unauthorized status.
      * @returns {Object} The access token and its expiration details.
      */
-  async getAccessToken (): Promise<{ accessToken: string | null; accessTokenExpiry: Date }> {
+  async getAccessToken (): Promise<TokenResponse> {
     try {
       const now = new Date()
       if (this.accessTokenExpiry.getTime() <= now.getTime()) {
@@ -139,7 +159,7 @@ class LiquidNodeAuthenticator {
      * @param {Object} token - The Express response object.
      * @returns {boolean} True if the scope is allowed, false otherwise.
      */
-  checkTokenScope (scope: string, token: any): boolean {
+  checkTokenScope (scope: string, token: TokenInfo | any): boolean {
     return this.scopeManager.checkTokenScope(scope, token)
   }
 }
