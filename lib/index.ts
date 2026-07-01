@@ -60,33 +60,40 @@ class LiquidNodeAuthenticator {
       const cacheResult = await this.cache.get(cacheKey)
       if (cacheResult) {
         if (cacheResult.ok === 1) {
+          this.logger.debug(`Token resolved from cache for key ${cacheKey}`)
           return cacheResult.data.tokenInfo
         } else {
+          this.logger.debug(`Cached token is invalid for key ${cacheKey}, rejecting`)
           throw new ForbiddenError()
         }
       }
 
       const clientToken = (await this.getAccessToken()).accessToken;
       if (!clientToken) {
-         throw new ForbiddenError()
+        this.logger.warn('No client access token available, cannot introspect')
+        throw new ForbiddenError()
       }
 
+      this.logger.debug('Introspecting token via remote')
       const { status, result } = await this.apiClient.introspectToken(token, clientToken);
-      
-      this.logger.debug(`Cache written for ${cacheKey}`)
+
       if (status !== 200 || !result.ok) {
         if (status === 401) {
+          this.logger.warn('Client access token rejected by introspect endpoint (401), invalidating service token')
           this.accessToken = null
           this.accessTokenExpiry = new Date(0)
+        } else {
+          this.logger.debug(`Token introspection returned status ${status}, rejecting`)
         }
         throw new ForbiddenError()
       }
       // No need to await. Cache can always be set again if failed.
       this.cache.set(cacheKey, result)
+      this.logger.debug(`Token introspected successfully, cached at ${cacheKey}`)
       return result.data.tokenInfo
     } catch (error) {
-      this.logger.error(error)
       if (isLiquidError(error)) { throw error }
+      this.logger.error('Unexpected error during token authentication:', error)
       throw new CustomError('UnknownError', 500)
     }
   }
@@ -104,23 +111,23 @@ class LiquidNodeAuthenticator {
       const now = new Date()
       if (this.accessTokenExpiry.getTime() <= now.getTime()) {
         const expiry = new Date()
-        
+        this.logger.debug('Service access token expired or missing, fetching from remote')
         const result = await this.apiClient.getClientCredentials(this.clientId, this.clientSecret, this.scope);
 
         this.accessToken = result.access_token
         expiry.setSeconds(expiry.getSeconds() + result.expires_in)
         this.accessTokenExpiry = expiry
-        this.logger.debug('Access token returned from remote.')
+        this.logger.info(`Service access token refreshed, expires at ${this.accessTokenExpiry.toISOString()}`)
       } else {
-        this.logger.debug('Access token returned from memory.')
+        this.logger.debug(`Service access token valid, expires at ${this.accessTokenExpiry.toISOString()}`)
       }
       return {
         accessToken: this.accessToken,
         accessTokenExpiry: this.accessTokenExpiry
       }
     } catch (error) {
-      this.logger.error(error)
       if (isLiquidError(error)) { throw error }
+      this.logger.error('Unexpected error fetching service access token:', error)
       throw new CustomError('UnknownError', 500)
     }
   }
