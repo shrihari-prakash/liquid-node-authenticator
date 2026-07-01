@@ -46,10 +46,11 @@ describe('ScopeManager', () => {
       await manager.initializeScopes();
 
       expect(fetchStub.called).to.be.true;
-      if (!mockLogger.error.calledWith('Scopes initialized.')) {
-         console.log(mockLogger.error.args);
-      }
-      expect(mockLogger.error.calledWith('Scopes initialized.')).to.be.true; 
+      expect(
+        mockLogger.info.args.some((args: any[]) =>
+          args[0] && args[0].startsWith('Scopes initialized.')
+        )
+      ).to.be.true;
     });
 
     it('should throw an error if fetch fails', async () => {
