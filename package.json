@@ -1,6 +1,6 @@
 {
   "name": "liquid-node-authenticator",
-  "version": "1.1.19",
+  "version": "1.1.20",
   "description": "A Node.js connector library to integrate your microservices with Liquid authentication services.",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -9,12 +9,13 @@
     "test": "mocha \"tests/**/*.tests.ts\"",
     "test:coverage": "NODE_ENV=test c8 --all --include=lib/* --reporter=html --reporter=text npm test",
     "test:watch": "npm test -- --watch",
-    "build": "tsc"
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
   },
   "targets": "> 0.25%, not dead",
   "repository": {
     "type": "git",
-    "url": "https://github.com/shrihari-prakash/liquid-node-authenticator"
+    "url": "git+https://github.com/shrihari-prakash/liquid-node-authenticator.git"
   },
   "keywords": [
     "npm",
