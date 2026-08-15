@@ -30,13 +30,20 @@ class LiquidNodeAuthenticator {
    * @constructor
    * @param {LiquidNodeAuthenticator.Options} options - Configuration options for the LiquidNodeAuthenticator.
    */
-  constructor ({ host, clientId, clientSecret, scope = '*', cacheOptions, debugging = true, logger }: LiquidNodeAuthenticator.Options) {
+  constructor ({ host, clientId, clientSecret, scope, cacheOptions, debugging = true, logger }: LiquidNodeAuthenticator.Options) {
     this.clientId = clientId
     this.clientSecret = clientSecret
-    this.scope = Array.isArray(scope) ? scope.join(',') : scope
     this.host = host
     this.cache = new Cache(cacheOptions)
     this.logger = logger || new Logger(debugging)
+    
+    if (!scope) {
+      this.logger.warn("No scope was provided during initialization. Liquid Node Authenticator will request the default scope '*'. It is highly recommended to explicitly specify the scopes your client requires (e.g., ['client:all']).");
+    }
+    
+    const finalScope = scope || '*';
+    this.scope = Array.isArray(finalScope) ? finalScope.join(',') : finalScope;
+    
     this.apiClient = new ApiClient({ host: this.host })
     this.scopeManager = new ScopeManager(this.host, this.logger)
     this.logger.info(
